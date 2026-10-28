@@ -30,6 +30,30 @@ The server validates configuration, connects to MongoDB, and only then listens o
 
 See `.env.example` for the complete variable list. `CLIENT_URL` accepts a comma-separated origin allowlist. SMTP variables are optional; when `SMTP_HOST` and `EMAIL_FROM` are configured, `sendEmail` can send mail through Nodemailer.
 
+## Deploy to Render
+
+Create a **Web Service** from this repository with:
+
+- **Root Directory:** `backend`
+- **Build Command:** `npm install`
+- **Start Command:** `npm start`
+
+Set `NODE_ENV=production` and configure these required environment variable names in Render:
+
+| Name | Purpose |
+| --- | --- |
+| `MONGODB_URI` | MongoDB Atlas connection URI |
+| `JWT_SECRET` | Signs short-lived access tokens |
+| `REFRESH_TOKEN_SECRET` | Hashes refresh tokens stored by the API |
+| `COOKIE_SECRET` | Signs the HTTP-only refresh cookie |
+| `CLIENT_URL` | Exact frontend origin allowed by CORS; comma-separate multiple origins |
+
+Use three distinct random values of at least 32 characters for the secret variables. Generate each locally with `node -e "console.log(require('node:crypto').randomBytes(48).toString('base64url'))"` and enter the values directly into Render without adding them to the repository. Render supplies `PORT`; the server binds to `0.0.0.0` and uses port `5000` as its local fallback.
+
+Optional values include `JWT_EXPIRES_IN`, `REFRESH_TOKEN_EXPIRES_IN`, and SMTP settings (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`). Render uses its platform DNS configuration for MongoDB SRV lookups; the Google DNS fallback is limited to Windows development. In Atlas, allow the Render service's outbound IP addresses using the narrowest network access rule available for your Render plan. Do not expose the database to all IP addresses as a workaround.
+
+Check `GET /api/v1/health` after deployment. It returns HTTP `503` unless Mongoose is connected and HTTP `200` when the required database connection is available.
+
 ## Run and test
 
 ```powershell
